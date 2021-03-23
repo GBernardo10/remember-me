@@ -1,0 +1,61 @@
+name: Build and Deploy to Google Compute Engine
+
+on:
+  push:
+    branches: 
+      - main
+  
+env:
+  PROJECT_ID: ${{ secrets.GCE_PROJECT }}
+  GCE_INSTANCE_NAME: remember-me
+  GCE_INSTANCE_ZONE: us-central1-a  
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest    
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@main
+      
+      - name: Setup Node.js (NPM)
+        uses: actions/setup-node@master
+        with:
+          node-version: '12.x'
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+        env:
+          CI: true
+
+      - name: Build Development
+        run: yarn build
+        
+  deploy-gce:
+    name: Deploy to GCE
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@main
+        
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          version: '290.0.1'
+          service_account_key: ${{ secrets.GCE_SA_KEY }}
+          project_id: ${{ secrets.GCE_PROJECT }}
+      
+      - name: Deploy
+        run: |-
+          gcloud compute scp --recurse build/ "$GCE_INSTANCE_NAME":~ \
+          --zone "$GCE_INSTANCE_ZONE"        
+
+#       - name: Google Cloud Compute Engine Deploy
+#         uses: mattes/gce-deploy-action@v5.0.0
+
+
+
+
+
