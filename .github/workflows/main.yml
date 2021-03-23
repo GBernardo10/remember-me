@@ -30,16 +30,7 @@ jobs:
 
       - name: Build Development
         run: yarn build
-        
-  deploy-gce:
-    name: Deploy to GCE
-    needs: build
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@main
-        
+                
       - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@master
         with:
@@ -50,12 +41,4 @@ jobs:
       - name: Deploy
         run: |-
           gcloud compute scp --recurse build/ "$GCE_INSTANCE_NAME":~ \
-          --zone "$GCE_INSTANCE_ZONE"        
-
-#       - name: Google Cloud Compute Engine Deploy
-#         uses: mattes/gce-deploy-action@v5.0.0
-
-
-
-
-
+          --zone "$GCE_INSTANCE_ZONE"
